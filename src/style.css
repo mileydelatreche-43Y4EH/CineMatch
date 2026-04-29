@@ -368,15 +368,15 @@ body {
 
 .watchlist-head h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 2.45rem);
-  font-weight: 800;
+  font-size: clamp(1.72rem, 3.4vw, 2.12rem);
+  font-weight: 700;
 }
 
 .watchlist-head p {
   margin: 0.1rem 0 0;
   color: #ff4f73;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .modify-btn {
