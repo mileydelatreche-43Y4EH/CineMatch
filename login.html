@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineMatch — Connexion</title>
+    <script>
+      try {
+        const session = JSON.parse(localStorage.getItem('cinematch_session') || 'null');
+        if (session?.email) {
+          window.location.replace('/');
+        }
+      } catch (_) {}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="landing-page">
+    <main class="landing-hero">
+      <div class="grain" aria-hidden="true"></div>
+      <section class="landing-content">
+        <p class="landing-brand">cinematch</p>
+        <h1>Ton cinema a la maison</h1>
+        <p class="landing-subtitle">
+          Des milliers de films et series en streaming HD/4K. Commence gratuitement des maintenant.
+        </p>
+        <div class="landing-actions">
+          <button id="btn-open-register" type="button" class="btn primary">Creer un compte</button>
+          <button id="btn-open-login" type="button" class="btn accent">Se connecter</button>
+        </div>
+      </section>
+    </main>
+
+    <div id="auth-overlay" class="auth-overlay" hidden>
+      <section class="auth-card">
+        <button id="btn-close-auth" type="button" class="notifications-close" aria-label="Fermer">×</button>
+        <h1 id="auth-title">Bon retour !</h1>
+        <p id="auth-subtitle">Connecte-toi pour acceder a ton compte</p>
+        <p id="auth-error" class="error" hidden></p>
+
+        <form id="login-form" class="auth-form">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" type="email" placeholder="toi@exemple.com" required />
+
+          <label for="auth-password">Mot de passe</label>
+          <input id="auth-password" type="password" placeholder="••••••••" required />
+
+          <button type="submit" class="btn accent full">Me connecter</button>
+        </form>
+
+        <button id="btn-google-login" type="button" class="btn primary full">Continuer avec Google</button>
+
+        <hr class="auth-sep" />
+
+        <form id="register-form" class="auth-form" hidden>
+          <h2>Creer un compte</h2>
+          <p class="auth-register-subtitle">Commence avec un compte gratuit et accede a tout le contenu</p>
+          <div class="auth-notice">
+            Tu n'as pas besoin d'utiliser une phrase secrete pour creer un nouveau compte.
+            Utilise simplement un email et un mot de passe.
+          </div>
+          <label for="reg-email">Email</label>
+          <input id="reg-email" type="email" placeholder="Email" required />
+          <label for="reg-password">Mot de passe</label>
+          <input id="reg-password" type="password" placeholder="Mot de passe" required minlength="6" />
+          <label for="reg-password-confirm">Confirmer le mot de passe</label>
+          <input id="reg-password-confirm" type="password" placeholder="Confirmer le mot de passe" required minlength="6" />
+
+          <label class="captcha-row cloudflare-style">
+            <input id="reg-captcha" type="checkbox" />
+            <span>Succes !</span>
+            <small>CLOUDFLARE</small>
+          </label>
+
+          <button id="btn-create-account" type="submit" class="btn accent full" disabled>Creer mon compte</button>
+          <button id="btn-google-register" type="button" class="btn primary full">Creer avec Google</button>
+          <p class="auth-switch-hint">Tu as deja un compte ? <button id="btn-switch-login" type="button">Se connecter</button></p>
+        </form>
+      </section>
+    </div>
+
+    <div id="profile-overlay" class="auth-overlay" hidden>
+      <section class="auth-card profile-card">
+        <h1>Cree ton profil</h1>
+        <p>Personnalise ton experience</p>
+        <div class="profile-avatar-zone">
+          <button id="btn-open-avatar-picker" type="button" class="avatar-picker-btn">
+            <span id="profile-avatar-preview" class="avatar-dot large-avatar" aria-hidden="true"></span>
+            <span>Avatar</span>
+          </button>
+          <div class="profile-avatar-actions">
+            <label class="btn primary" for="avatar-upload-input">Importer une photo</label>
+            <input id="avatar-upload-input" type="file" accept="image/*" hidden />
+          </div>
+        </div>
+        <form id="profile-setup-form" class="auth-form">
+          <label for="profile-display-name">Nom du profil</label>
+          <input id="profile-display-name" type="text" placeholder="Ex: Papa, Maman, Pierre..." required />
+          <label class="captcha-row">
+            <input id="profile-pin-enabled" type="checkbox" />
+            <span>Proteger ce profil avec un code PIN</span>
+          </label>
+          <input id="profile-pin-code" type="password" placeholder="Code PIN (4 chiffres)" maxlength="4" pattern="[0-9]{4}" hidden />
+          <button type="submit" class="btn accent full">Creer mon profil</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="avatar-gallery-overlay" class="auth-overlay" hidden>
+      <section class="auth-card avatar-gallery-card">
+        <button id="btn-close-avatar-gallery" type="button" class="notifications-close" aria-label="Fermer">×</button>
+        <h2>Choisis ton avatar</h2>
+        <div class="avatar-category-tabs">
+          <button type="button" class="chip avatar-tab active" data-avatar-cat="netflix">Netflix</button>
+          <button type="button" class="chip avatar-tab" data-avatar-cat="disney">Disney+</button>
+          <button type="button" class="chip avatar-tab" data-avatar-cat="prime">Prime Video</button>
+          <button type="button" class="chip avatar-tab" data-avatar-cat="anime">Anime</button>
+        </div>
+        <div id="avatar-gallery-grid" class="avatar-gallery-grid"></div>
+        <div class="avatar-gallery-actions">
+          <button id="btn-validate-avatar" type="button" class="btn accent">Valider cet avatar</button>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="/src/login.js"></script>
+  </body>
+</html>

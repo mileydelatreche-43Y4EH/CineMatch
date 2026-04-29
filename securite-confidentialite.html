@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineMatch — Sécurité & Confidentialité</title>
+    <script>
+      try {
+        const session = JSON.parse(localStorage.getItem("cinematch_session") || "null");
+        if (!session?.email) {
+          window.location.replace("/login.html");
+        }
+      } catch (_) {
+        window.location.replace("/login.html");
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="info-page">
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <a href="/" class="brand-name info-link">cinematch</a>
+      </div>
+      <nav class="topnav" aria-label="Navigation principale">
+        <a href="/">Watchlist</a>
+        <a href="/search.html">Recherche</a>
+      </nav>
+      <div class="topbar-right">
+        <a href="/search.html" class="search-chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.69 13.35l4.22 4.21 1.06-1.06-4.21-4.22A7.5 7.5 0 0 0 10.5 3Zm0 1.5A6 6 0 1 1 4.5 10.5a6 6 0 0 1 6-6Z" />
+          </svg>
+          <span>Rechercher</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="info-main">
+      <section class="info-hero">
+        <p class="info-badge">Informations légales</p>
+        <h1>Sécurité & Confidentialité</h1>
+        <p>
+          Chez Cinematch, nous faisons le maximum pour protéger tes données et te proposer
+          une expérience transparente.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Données collectées</h2>
+        <p>
+          Nous stockons uniquement les informations nécessaires au fonctionnement du compte
+          (adresse email, pseudo, avatar et préférences). Les données de session sont enregistrées
+          localement pour maintenir ta connexion.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Protection et sécurité</h2>
+        <p>
+          Les accès sont limités aux fonctionnalités essentielles. Les contenus affichés sur la
+          plateforme proviennent de services tiers, et les droits associés restent la responsabilité
+          des fournisseurs concernés.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Confidentialité</h2>
+        <p>
+          Cinematch ne revend pas tes données personnelles. En cas de demande liée à la
+          confidentialité, tu peux nous contacter via les canaux indiqués sur la plateforme.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <section class="site-footer-block">
+          <h3>Liens utiles</h3>
+          <div class="site-footer-links">
+            <a href="/securite-confidentialite.html"><span class="footer-link-icon">🖐️</span>Sécurité &amp; Confidentialité</a>
+            <a href="/a-propos.html"><span class="footer-link-icon">?</span>À propos de nous</a>
+            <a href="/">Retour à l'accueil</a>
+          </div>
+        </section>
+        <p class="site-footer-credit">Développé avec ❤️ grâce à Floppyxx et Kylian</p>
+      </div>
+    </footer>
+  </body>
+</html>

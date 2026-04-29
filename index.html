@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineMatch — Films comme les tiens</title>
+    <script>
+      try {
+        const session = JSON.parse(localStorage.getItem('cinematch_session') || 'null');
+        if (!session?.email) {
+          window.location.replace('/login.html');
+        }
+      } catch (_) {
+        window.location.replace('/login.html');
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-name">cinematch</span>
+      </div>
+      <nav class="topnav" aria-label="Navigation principale">
+        <a href="#">idée</a>
+        <a href="#" class="active">Watchlist</a>
+      </nav>
+      <div class="topbar-right">
+        <a href="/search.html" class="search-chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.69 13.35l4.22 4.21 1.06-1.06-4.21-4.22A7.5 7.5 0 0 0 10.5 3Zm0 1.5A6 6 0 1 1 4.5 10.5a6 6 0 0 1 6-6Z" />
+          </svg>
+          <span>Rechercher</span>
+        </a>
+        <button type="button" id="btn-notifications" class="icon-chip" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 4a5 5 0 0 0-5 5v2.9c0 .7-.2 1.4-.6 2L5 16h14l-1.4-2.1c-.4-.6-.6-1.3-.6-2V9a5 5 0 0 0-5-5Zm0 16a2.5 2.5 0 0 1-2.2-1.3h4.4A2.5 2.5 0 0 1 12 20Z"
+            />
+          </svg>
+        </button>
+        <button type="button" class="profile-chip">
+          <span class="avatar-dot js-profile-avatar" aria-hidden="true"></span>
+          <span class="js-profile-name">Floppyxx</span>
+        </button>
+        <aside id="profile-menu" class="profile-menu" hidden>
+          <div class="profile-menu-head">
+            <span class="avatar-dot js-profile-avatar" aria-hidden="true"></span>
+            <div>
+              <strong class="js-profile-name">Floppyxx</strong>
+              <p>Compte gratuit</p>
+            </div>
+          </div>
+          <button type="button" class="profile-menu-item">Changer de profil</button>
+          <button type="button" class="profile-menu-item premium">Passer Premium</button>
+          <button type="button" class="profile-menu-item">Paramètres</button>
+          <button type="button" class="profile-menu-item">Historique</button>
+          <button type="button" class="profile-menu-item">Watchlist</button>
+          <button type="button" class="profile-menu-item">Cadeaux</button>
+          <button type="button" class="profile-menu-item">Téléchargements</button>
+          <button type="button" id="btn-logout" class="profile-menu-item danger">Déconnexion</button>
+        </aside>
+      </div>
+    </header>
+
+    <div id="notif-backdrop" class="notif-backdrop" hidden></div>
+    <aside id="notifications-drawer" class="notifications-drawer" aria-hidden="true">
+      <header class="notifications-head">
+        <h2>Notifications</h2>
+        <button type="button" id="btn-close-notifications" class="notifications-close" aria-label="Fermer les notifications">×</button>
+      </header>
+      <div class="notifications-empty">
+        <div class="notifications-icon" aria-hidden="true">🔕</div>
+        <p class="notifications-title">Aucune notification</p>
+        <p class="notifications-subtitle">Tu n’as aucune notification pour le moment</p>
+      </div>
+    </aside>
+
+    <main class="watchlist-layout">
+      <section class="watchlist-head">
+        <div>
+          <h1>Ma watchlist</h1>
+          <p>Retrouve ici tous les trésors que t’as mis de côté</p>
+        </div>
+        <button type="button" class="btn modify-btn">Modifier</button>
+      </section>
+
+      <section class="watchlist-controls">
+        <div class="search-row search-row-wide">
+          <label class="sr-only" for="movie-query">Rechercher un film</label>
+          <input
+            id="movie-query"
+            type="search"
+            autocomplete="off"
+            placeholder="Rechercher un titre..."
+          />
+        </div>
+        <div class="filter-row">
+          <button type="button" class="chip" data-filter="all">Tous</button>
+          <button type="button" class="chip" data-filter="movies">Films</button>
+          <button type="button" class="chip active" data-filter="series">Séries</button>
+          <button type="button" class="chip" data-filter="anime">Animés</button>
+        </div>
+      </section>
+
+      <ul id="search-results" class="search-results" hidden></ul>
+      <section class="watchlist-grid" aria-label="Affiches watchlist">
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/x4biAVdPVCghBlsVIzB6NmbghIz.jpg" alt="Black Panther" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/9E2y5Q7WlCVNEhP5GiVTjhEhx1o.jpg" alt="Black Widow" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/8Y43POKjjKDGI9MH89NW0NAzzp8.jpg" alt="Interstellar" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" alt="Parasite" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg" alt="Shawshank Redemption" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg" alt="Le Parrain" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/sF1U4EUQS8YHUYjNl3pMGNIQyr0.jpg" alt="Dune" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/pIkRyD18kl4FhoCNQuWxWu5cBLM.jpg" alt="Le Batman" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/5KCVkau1HEl7ZzfPsKAPM0sMiKc.jpg" alt="Avengers Endgame" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/8j58iEBw9pOXFD2L0nt0ZXeHviB.jpg" alt="Joker" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/e1mjopzAS2KNsvpbpahQ1a6SkSn.jpg" alt="Le Chevalier Noir" loading="lazy" /></article>
+        <article class="poster-card"><span class="poster-type"><span class="poster-type-dot"></span>Film</span><img src="https://image.tmdb.org/t/p/original/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg" alt="Avengers Infinity War" loading="lazy" /></article>
+      </section>
+
+      <section hidden aria-hidden="true">
+        <button type="button" id="btn-recommend">Trouver des films pour moi</button>
+        <ul id="picked-list"></ul>
+        <p id="picked-empty">Aucun film pour l’instant.</p>
+        <p id="api-warning" hidden></p>
+        <p id="results-intro">Les suggestions apparaîtront ici après ta sélection.</p>
+        <div id="results-grid"></div>
+        <p id="results-error" hidden></p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <section class="site-footer-block">
+          <h3>Disclaimer</h3>
+          <p>
+            Cinematch n’héberge aucun fichier, mais propose des liens vers des services tiers.
+            Les questions juridiques doivent être traitées avec les hébergeurs et les fournisseurs
+            de fichiers. Cinematch n’est pas responsable des fichiers multimédias diffusés par les
+            fournisseurs de vidéos.
+          </p>
+        </section>
+        <section class="site-footer-block">
+          <h3>Liens utiles</h3>
+          <div class="site-footer-links">
+            <a href="#">DMCA</a>
+            <a href="/securite-confidentialite.html"><span class="footer-link-icon">🖐️</span>Sécurité &amp; Confidentialité</a>
+            <a href="/a-propos.html"><span class="footer-link-icon">?</span>À propos de nous</a>
+          </div>
+        </section>
+        <section class="site-footer-block">
+          <h3>Réseaux sociaux</h3>
+          <div class="site-footer-links">
+            <a href="#">Telegram</a>
+          </div>
+        </section>
+        <p class="site-footer-credit">Développé avec ❤️ grâce à Floppyxx et Kylian</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

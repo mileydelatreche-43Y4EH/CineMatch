@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineMatch — À propos de nous</title>
+    <script>
+      try {
+        const session = JSON.parse(localStorage.getItem("cinematch_session") || "null");
+        if (!session?.email) {
+          window.location.replace("/login.html");
+        }
+      } catch (_) {
+        window.location.replace("/login.html");
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="info-page">
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <a href="/" class="brand-name info-link">cinematch</a>
+      </div>
+      <nav class="topnav" aria-label="Navigation principale">
+        <a href="/" class="active">Watchlist</a>
+        <a href="/search.html">Recherche</a>
+      </nav>
+      <div class="topbar-right">
+        <a href="/search.html" class="search-chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.69 13.35l4.22 4.21 1.06-1.06-4.21-4.22A7.5 7.5 0 0 0 10.5 3Zm0 1.5A6 6 0 1 1 4.5 10.5a6 6 0 0 1 6-6Z" />
+          </svg>
+          <span>Rechercher</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="info-main">
+      <section class="info-hero">
+        <p class="info-badge">L'équipe</p>
+        <h1>À propos de nous</h1>
+        <p>
+          Cinematch est un projet créé pour rendre la recherche de films et de séries
+          plus rapide, plus visuelle et plus fun.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Notre mission</h2>
+        <p>
+          Proposer une interface moderne inspirée des plateformes premium, avec une watchlist
+          claire, une recherche intelligente, et une expérience fluide en français.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Le projet</h2>
+        <p>
+          Le site combine une interface web dynamique et des données de films/séries via TMDB,
+          afin d'afficher des affiches en haute qualité et des recommandations pertinentes.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Crédits</h2>
+        <p>
+          Projet imaginé et développé par Floppyxx et Kylian.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <section class="site-footer-block">
+          <h3>Liens utiles</h3>
+          <div class="site-footer-links">
+            <a href="/securite-confidentialite.html"><span class="footer-link-icon">🖐️</span>Sécurité &amp; Confidentialité</a>
+            <a href="/a-propos.html"><span class="footer-link-icon">?</span>À propos de nous</a>
+            <a href="/">Retour à l'accueil</a>
+          </div>
+        </section>
+        <p class="site-footer-credit">Développé avec ❤️ grâce à Floppyxx et Kylian</p>
+      </div>
+    </footer>
+  </body>
+</html>
