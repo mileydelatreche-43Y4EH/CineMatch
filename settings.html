@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineMatch — Paramètres</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="settings-page">
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="brand">
+        <a href="/search.html" class="brand-name" style="text-decoration:none;color:inherit;">cinematch</a>
+      </div>
+      <nav class="topnav" aria-label="Navigation principale">
+        <a href="/search.html">Catalogue</a>
+        <a href="/suggestions.html">Suggestions</a>
+        <a href="/idee.html">idée</a>
+        <a href="/index.html">Watchlist</a>
+      </nav>
+      <div class="topbar-right">
+        <a href="/search.html" class="search-chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10.5 3a7.5 7.5 0 1 0 4.69 13.35l4.22 4.21 1.06-1.06-4.21-4.22A7.5 7.5 0 0 0 10.5 3Zm0 1.5A6 6 0 1 1 4.5 10.5a6 6 0 0 1 6-6Z" />
+          </svg>
+          <span>Rechercher</span>
+        </a>
+        <button type="button" id="btn-notifications" class="icon-chip" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 4a5 5 0 0 0-5 5v2.9c0 .7-.2 1.4-.6 2L5 16h14l-1.4-2.1c-.4-.6-.6-1.3-.6-2V9a5 5 0 0 0-5-5Zm0 16a2.5 2.5 0 0 1-2.2-1.3h4.4A2.5 2.5 0 0 1 12 20Z"
+            />
+          </svg>
+        </button>
+        <button type="button" class="profile-chip">
+          <span class="avatar-dot js-profile-avatar" aria-hidden="true"></span>
+          <span class="js-profile-name"></span>
+        </button>
+        <aside id="profile-menu" class="profile-menu" hidden>
+          <div class="profile-menu-head">
+            <span class="avatar-dot js-profile-avatar" aria-hidden="true"></span>
+            <div>
+              <strong class="js-profile-name"></strong>
+              <p>Compte gratuit</p>
+            </div>
+          </div>
+          <button type="button" id="btn-switch-profile" class="profile-menu-item">Changer de profil</button>
+          <button type="button" id="btn-settings" class="profile-menu-item">Paramètres</button>
+          <button type="button" id="btn-watchlist" class="profile-menu-item">Watchlist</button>
+          <button type="button" id="btn-logout" class="profile-menu-item danger">Déconnexion</button>
+        </aside>
+      </div>
+    </header>
+    <div id="notif-backdrop" class="notif-backdrop" hidden></div>
+    <aside id="notifications-drawer" class="notifications-drawer" aria-hidden="true">
+      <header class="notifications-head">
+        <h2>Notifications</h2>
+        <button type="button" id="btn-close-notifications" class="notifications-close" aria-label="Fermer les notifications">×</button>
+      </header>
+      <div class="notifications-empty">
+        <div class="notifications-icon" aria-hidden="true">🔕</div>
+        <p class="notifications-title">Aucune notification</p>
+        <p class="notifications-subtitle">Tu n’as aucune notification pour le moment</p>
+      </div>
+    </aside>
+
+    <main class="settings-shell settings-shell-wide">
+      <header class="settings-header-block">
+        <h1>Paramètres</h1>
+        <p>Gérer ton compte et tes préférences</p>
+      </header>
+
+      <section class="settings-layout">
+        <aside class="settings-sidebar" aria-label="Rubriques paramètres">
+          <button type="button" class="settings-nav-item" data-settings-tab="overview">Aperçu</button>
+          <p class="settings-nav-label">Compte</p>
+          <button type="button" class="settings-nav-item active" data-settings-tab="profiles">Profils</button>
+          <button type="button" class="settings-nav-item" data-settings-tab="subscription">Abonnement</button>
+          <button type="button" class="settings-nav-item">Cadeaux</button>
+          <button type="button" class="settings-nav-item">Parrainage</button>
+          <button type="button" class="settings-nav-item">Sécurité</button>
+          <p class="settings-nav-label">Préférences</p>
+          <button type="button" class="settings-nav-item">Lecture</button>
+          <button type="button" class="settings-nav-item">Notifications</button>
+        </aside>
+
+        <div class="settings-content">
+          <section class="settings-view active" data-settings-view="profiles">
+            <header class="settings-view-head">
+              <h2>Profils</h2>
+              <p id="settings-profiles-limit-text">Gérer les profils de ton compte.</p>
+            </header>
+            <div id="settings-profiles-list" class="settings-profiles-list"></div>
+            <button id="btn-settings-add-profile" type="button" class="btn accent">+ Ajouter un profil</button>
+          </section>
+
+          <section class="settings-view" data-settings-view="subscription">
+            <header class="settings-view-head">
+              <h2>Abonnement</h2>
+              <p>Gérer ton abonnement et tes avantages</p>
+            </header>
+            <article class="settings-subscription-card">
+              <div>
+                <strong>Compte Gratuit - Accès limité</strong>
+                <p>
+                  Passe Premium pour profiter de toutes les fonctionnalités de Cinepulse sans limitation.
+                </p>
+              </div>
+              <button type="button" class="btn primary">Devenir Premium</button>
+            </article>
+          </section>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/nav-router.js"></script>
+    <script type="module" src="/src/settings-page.js"></script>
+  </body>
+</html>

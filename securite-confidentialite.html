@@ -4,16 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CineMatch — Sécurité & Confidentialité</title>
-    <script>
-      try {
-        const session = JSON.parse(localStorage.getItem("cinematch_session") || "null");
-        if (!session?.email) {
-          window.location.replace("/login.html");
-        }
-      } catch (_) {
-        window.location.replace("/login.html");
-      }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,11 +16,13 @@
     <div class="grain" aria-hidden="true"></div>
     <header class="topbar">
       <div class="brand">
-        <a href="/" class="brand-name info-link">cinematch</a>
+        <a href="/search.html" class="brand-name info-link">cinematch</a>
       </div>
       <nav class="topnav" aria-label="Navigation principale">
-        <a href="/">Watchlist</a>
-        <a href="/search.html">Recherche</a>
+        <a href="/search.html">Catalogue</a>
+        <a href="/suggestions.html">Suggestions</a>
+        <a href="/idee.html">idée</a>
+        <a href="/index.html">Watchlist</a>
       </nav>
       <div class="topbar-right">
         <a href="/search.html" class="search-chip">
@@ -39,8 +31,44 @@
           </svg>
           <span>Rechercher</span>
         </a>
+        <button type="button" id="btn-notifications" class="icon-chip" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 4a5 5 0 0 0-5 5v2.9c0 .7-.2 1.4-.6 2L5 16h14l-1.4-2.1c-.4-.6-.6-1.3-.6-2V9a5 5 0 0 0-5-5Zm0 16a2.5 2.5 0 0 1-2.2-1.3h4.4A2.5 2.5 0 0 1 12 20Z"
+            />
+          </svg>
+        </button>
+        <button type="button" class="profile-chip">
+          <span class="avatar-dot js-profile-avatar" aria-hidden="true"></span>
+          <span class="js-profile-name"></span>
+        </button>
+        <aside id="profile-menu" class="profile-menu" hidden>
+          <div class="profile-menu-head">
+            <span class="avatar-dot js-profile-avatar" aria-hidden="true"></span>
+            <div>
+              <strong class="js-profile-name"></strong>
+              <p>Compte gratuit</p>
+            </div>
+          </div>
+          <button type="button" id="btn-switch-profile" class="profile-menu-item">Changer de profil</button>
+          <button type="button" id="btn-settings" class="profile-menu-item">Paramètres</button>
+          <button type="button" class="profile-menu-item">Watchlist</button>
+          <button type="button" id="btn-logout" class="profile-menu-item danger">Déconnexion</button>
+        </aside>
       </div>
     </header>
+    <div id="notif-backdrop" class="notif-backdrop" hidden></div>
+    <aside id="notifications-drawer" class="notifications-drawer" aria-hidden="true">
+      <header class="notifications-head">
+        <h2>Notifications</h2>
+        <button type="button" id="btn-close-notifications" class="notifications-close" aria-label="Fermer les notifications">×</button>
+      </header>
+      <div class="notifications-empty">
+        <div class="notifications-icon" aria-hidden="true">🔕</div>
+        <p class="notifications-title">Aucune notification</p>
+        <p class="notifications-subtitle">Tu n’as aucune notification pour le moment</p>
+      </div>
+    </aside>
 
     <main class="info-main">
       <section class="info-hero">
@@ -59,6 +87,11 @@
           (adresse email, pseudo, avatar et préférences). Les données de session sont enregistrées
           localement pour maintenir ta connexion.
         </p>
+        <p>
+          Les éléments liés à ton expérience (profil actif, personnalisation visuelle, préférences
+          de navigation) servent à te proposer une interface cohérente entre les pages et à rendre
+          la reprise de session plus fluide.
+        </p>
       </section>
 
       <section class="info-card">
@@ -68,6 +101,11 @@
           plateforme proviennent de services tiers, et les droits associés restent la responsabilité
           des fournisseurs concernés.
         </p>
+        <p>
+          Nous appliquons des règles de sécurité côté authentification afin d’éviter les accès
+          non autorisés, et nous limitons les actions sensibles aux utilisateurs connectés sur
+          leur propre compte.
+        </p>
       </section>
 
       <section class="info-card">
@@ -75,6 +113,36 @@
         <p>
           Cinematch ne revend pas tes données personnelles. En cas de demande liée à la
           confidentialité, tu peux nous contacter via les canaux indiqués sur la plateforme.
+        </p>
+        <p>
+          Notre objectif est de minimiser la collecte de données : nous conservons uniquement ce
+          qui est utile pour les fonctionnalités principales du site (connexion, profils, navigation
+          et expérience personnalisée).
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Bonnes pratiques utilisateur</h2>
+        <p>
+          Utilise un mot de passe solide, évite de partager ton compte et pense à te déconnecter
+          sur les appareils que tu n'utilises plus. Cela aide à garder ton compte protégé.
+        </p>
+        <p>
+          Vérifie régulièrement ton profil actif, garde tes informations à jour et n’utilise pas
+          le même mot de passe que sur d’autres services.
+        </p>
+      </section>
+
+      <section class="info-card">
+        <h2>Transparence sur les recommandations</h2>
+        <p>
+          Cinematch met en avant des contenus à partir de tes interactions dans l’application
+          (profils, recherche, navigation). Nous cherchons à te proposer des idées pertinentes
+          sans exploiter des données personnelles inutiles.
+        </p>
+        <p>
+          Les suggestions ont pour but de t’aider à gagner du temps, découvrir de nouveaux films
+          et séries, et construire une watchlist qui correspond à tes goûts.
         </p>
       </section>
     </main>
@@ -92,5 +160,7 @@
         <p class="site-footer-credit">Développé avec ❤️ grâce à Floppyxx et Kylian</p>
       </div>
     </footer>
+    <script type="module" src="/src/nav-router.js"></script>
+    <script type="module" src="/src/info-page.js"></script>
   </body>
 </html>

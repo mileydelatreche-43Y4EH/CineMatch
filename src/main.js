@@ -1,12 +1,15 @@
-import { getCurrentUser, logoutUser, requireAuth } from './auth.js';
-
-if (!requireAuth()) {
-  throw new Error('Auth redirect');
-}
+import {
+  ensureDefaultProfileForCurrentUser,
+  getActiveProfileForCurrentUser,
+  getCurrentUser,
+  logoutUser,
+  requireAuth,
+} from './auth.js';
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const API_BASE = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p';
+const WATCHLIST_STORE_KEY = 'cinematch_watchlist_store_v1';
 
 const LANG = 'fr-FR';
 
@@ -28,14 +31,115 @@ const els = {
   notificationsDrawer: document.getElementById('notifications-drawer'),
   btnCloseNotifications: document.getElementById('btn-close-notifications'),
   notifBackdrop: document.getElementById('notif-backdrop'),
-  filterChips: document.querySelectorAll('.chip'),
+  filterChips: document.querySelectorAll('[data-filter]'),
+  watchlistGrid: document.querySelector('.watchlist-grid'),
+  watchlistEmpty: document.querySelector('.watchlist-empty'),
+  watchlistControls: document.getElementById('watchlist-controls'),
+  watchlistModifyBtn: document.getElementById('btn-watchlist-modify'),
   topbar: document.querySelector('.topbar'),
   logoutBtn: document.getElementById('btn-logout'),
+  switchProfileBtn: document.getElementById('btn-switch-profile'),
+  settingsBtn: document.getElementById('btn-settings'),
 };
 
 /** @type {{ id: number; title: string; poster_path: string | null }[]} */
 let picked = [];
 let searchDebounceTimer = null;
+let activeWatchlistFilter = 'all';
+
+function normalizeWatchlistType(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return 'movies';
+  if (raw.includes('serie')) return 'series';
+  if (raw.includes('anim')) return 'anime';
+  return 'movies';
+}
+
+function getWatchlistStore() {
+  try {
+    return JSON.parse(localStorage.getItem(WATCHLIST_STORE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function getCurrentWatchlistItems() {
+  const store = getWatchlistStore();
+  const userKey = getCurrentAuthUserIdFromStorage() || 'guest';
+  const list = Array.isArray(store[userKey]) ? store[userKey] : [];
+  return [...list].sort((a, b) => Number(b.addedAt || 0) - Number(a.addedAt || 0));
+}
+
+function renderStoredWatchlist() {
+  if (!els.watchlistGrid) return;
+  const items = getCurrentWatchlistItems();
+  const emptyNode = els.watchlistGrid.querySelector('.watchlist-empty');
+  if (emptyNode) emptyNode.remove();
+  const cards = items.map((item) => {
+    const type = normalizeWatchlistType(item.type);
+    const typeLabel = type === 'series' ? 'Série' : type === 'anime' ? 'Animé' : 'Film';
+    const article = document.createElement('article');
+    article.className = 'result-card';
+    article.innerHTML = `
+      <article class="poster-card" data-type="${type}">
+        <span class="poster-type"><span class="poster-type-dot"></span>${typeLabel}</span>
+        <img src="${item.poster || ''}" alt="${escapeHtml(item.title || '')}" loading="lazy" />
+      </article>
+      <h3>${escapeHtml(item.title || 'Titre inconnu')}</h3>
+      <p>${escapeHtml(item.meta || '')}</p>
+    `;
+    return article;
+  });
+  cards.forEach((card) => els.watchlistGrid.appendChild(card));
+}
+
+function getCurrentAuthUserIdFromStorage() {
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.includes('-auth-token')) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      const user = parsed?.user || parsed?.currentSession?.user || parsed?.session?.user;
+      const userId = user?.id || user?.sub;
+      if (typeof userId === 'string' && userId.length > 0) return userId;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function getCachedActiveProfile() {
+  try {
+    const profilesStore = JSON.parse(localStorage.getItem('cinematch_profiles_store_v1') || '{}');
+    const activeStore = JSON.parse(localStorage.getItem('cinematch_active_profile_store_v1') || '{}');
+    const userId = getCurrentAuthUserIdFromStorage();
+    if (!userId) return null;
+    const activeProfileId = activeStore[userId];
+    if (!activeProfileId) return null;
+    const profiles = profilesStore[userId] || [];
+    return profiles.find((p) => p.id === activeProfileId) || null;
+  } catch {
+    return null;
+  }
+}
+
+function hydrateProfileFromCache() {
+  const cachedProfile = getCachedActiveProfile();
+  if (!cachedProfile) return;
+  document.querySelectorAll('.js-profile-name').forEach((node) => {
+    node.textContent = cachedProfile.name || 'Profil';
+  });
+  if (cachedProfile.avatar) {
+    document.querySelectorAll('.js-profile-avatar').forEach((node) => {
+      node.style.backgroundImage = `url("${cachedProfile.avatar}")`;
+      node.style.backgroundSize = 'cover';
+      node.style.backgroundPosition = 'center';
+    });
+  }
+}
 
 /**
  * TMDB : soit `api_key` (clé v3), soit jeton « API Read Access » en Bearer (commence souvent par ey…)
@@ -398,22 +502,71 @@ if (els.notifBackdrop) {
 }
 
 if (els.filterChips?.length) {
+  const detectCardFilterType = (card) => {
+    const poster = card.querySelector('.poster-card');
+    const explicitType = poster?.getAttribute('data-type');
+    if (explicitType) return normalizeWatchlistType(explicitType);
+    const typeLabel = poster?.querySelector('.poster-type')?.textContent || '';
+    return normalizeWatchlistType(typeLabel);
+  };
+
+  const syncWatchlistEmptyState = () => {
+    if (!els.watchlistGrid || !els.watchlistEmpty) return;
+    const hasVisibleCard = Array.from(els.watchlistGrid.querySelectorAll('.result-card')).some(
+      (card) => card.style.display !== 'none'
+    );
+    const hasAnyCard = els.watchlistGrid.querySelector('.result-card');
+    if (!hasAnyCard) {
+      els.watchlistEmpty.hidden = false;
+      els.watchlistEmpty.innerHTML =
+        "<span class=\"watchlist-empty-icon\">⚠</span>Ta watchlist ne contient rien... N'hésite pas à y<br />ajouter quelques pépites !";
+      if (els.watchlistControls) els.watchlistControls.hidden = true;
+      if (els.watchlistModifyBtn) els.watchlistModifyBtn.hidden = true;
+      return;
+    }
+    if (els.watchlistControls) els.watchlistControls.hidden = false;
+    if (els.watchlistModifyBtn) els.watchlistModifyBtn.hidden = false;
+    els.watchlistEmpty.hidden = hasVisibleCard;
+    if (!hasVisibleCard) {
+      els.watchlistEmpty.textContent = 'Aucun résultat dans ta watchlist pour ce filtre.';
+    }
+  };
+
+  const applyWatchlistFilter = (filter) => {
+    activeWatchlistFilter = filter;
+    if (!els.watchlistGrid) return;
+    const cards = Array.from(els.watchlistGrid.querySelectorAll('.result-card'));
+    cards.forEach((card) => {
+      const cardType = detectCardFilterType(card);
+      const show = filter === 'all' || cardType === filter;
+      card.style.display = show ? '' : 'none';
+    });
+    syncWatchlistEmptyState();
+  };
+
   els.filterChips.forEach((chip) => {
     chip.addEventListener('click', () => {
       els.filterChips.forEach((c) => c.classList.remove('active'));
       chip.classList.add('active');
+      applyWatchlistFilter(chip.getAttribute('data-filter') || 'all');
     });
   });
+
+  applyWatchlistFilter(activeWatchlistFilter);
 }
 
-const currentUser = getCurrentUser();
-if (currentUser) {
+async function hydrateCurrentUserUi() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return;
+  const activeProfile = await getActiveProfileForCurrentUser();
+  const displayName = activeProfile?.name || currentUser.name;
   document.querySelectorAll('.js-profile-name').forEach((node) => {
-    node.textContent = currentUser.name;
+    node.textContent = displayName;
   });
-  if (currentUser.profile?.avatar) {
+  const avatarUrl = activeProfile?.avatar || currentUser.profile?.avatar;
+  if (avatarUrl) {
     document.querySelectorAll('.js-profile-avatar').forEach((node) => {
-      node.style.backgroundImage = `url("${currentUser.profile.avatar}")`;
+      node.style.backgroundImage = `url("${avatarUrl}")`;
       node.style.backgroundSize = 'cover';
       node.style.backgroundPosition = 'center';
     });
@@ -421,9 +574,21 @@ if (currentUser) {
 }
 
 if (els.logoutBtn) {
-  els.logoutBtn.addEventListener('click', () => {
-    logoutUser();
+  els.logoutBtn.addEventListener('click', async () => {
+    await logoutUser();
     window.location.href = '/login.html';
+  });
+}
+
+if (els.switchProfileBtn) {
+  els.switchProfileBtn.addEventListener('click', () => {
+    window.location.href = '/profiles.html?next=%2Findex.html';
+  });
+}
+
+if (els.settingsBtn) {
+  els.settingsBtn.addEventListener('click', () => {
+    window.location.href = '/settings.html';
   });
 }
 
@@ -440,6 +605,24 @@ function updateTopbarOnScroll() {
 
 window.addEventListener('scroll', updateTopbarOnScroll, { passive: true });
 updateTopbarOnScroll();
+hydrateProfileFromCache();
 
 showApiWarning();
+renderStoredWatchlist();
 updatePickedUI();
+
+async function initPageAuth() {
+  const isAuthed = await requireAuth();
+  if (!isAuthed) throw new Error('Auth redirect');
+  await ensureDefaultProfileForCurrentUser();
+  const activeProfile = await getActiveProfileForCurrentUser();
+  if (!activeProfile) {
+    window.location.href = '/profiles.html?next=%2Findex.html';
+    return;
+  }
+  await hydrateCurrentUserUi();
+}
+
+initPageAuth().catch((error) => {
+  console.error(error);
+});

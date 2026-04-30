@@ -1,7 +1,97 @@
-const USERS_KEY = 'cinematch_users';
-const SESSION_KEY = 'cinematch_session';
+import { supabase } from './supabase.js';
+const PROFILES_STORE_KEY = 'cinematch_profiles_store_v1';
+const ACTIVE_PROFILE_STORE_KEY = 'cinematch_active_profile_store_v1';
+const MAX_PROFILES_PER_ACCOUNT = 3;
 
-function readJson(key, fallback) {
+function normalizeAuthUser(user) {
+  if (!user) return null;
+  const fallbackName = user.email?.split('@')?.[0] || 'Utilisateur';
+  return {
+    id: user.id,
+    name: user.user_metadata?.display_name || user.user_metadata?.name || fallbackName,
+    email: user.email || null,
+    profile: {
+      displayName: user.user_metadata?.display_name || null,
+      avatar: user.user_metadata?.avatar || null,
+      pinEnabled: Boolean(user.user_metadata?.pin_enabled),
+      pinCode: user.user_metadata?.pin_code || null,
+      completed: Boolean(user.user_metadata?.profile_completed),
+    },
+  };
+}
+
+export async function getSession() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw new Error(error.message);
+  return data.session;
+}
+
+export async function getCurrentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw new Error(error.message);
+  return normalizeAuthUser(data.user);
+}
+
+export async function registerUser({ name, email, password }) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const { data, error } = await supabase.auth.signUp({
+    email: normalizedEmail,
+    password: String(password || ''),
+    options: {
+      data: {
+        name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Utilisateur',
+      },
+    },
+  });
+  if (error) throw new Error(error.message);
+  return normalizeAuthUser(data.user);
+}
+
+export async function updateCurrentUserProfile({ displayName, avatar, pinEnabled = false, pinCode = null }) {
+  const cleanDisplayName = String(displayName || '').trim();
+  const { data, error } = await supabase.auth.updateUser({
+    data: {
+      display_name: cleanDisplayName || null,
+      avatar: avatar || null,
+      pin_enabled: Boolean(pinEnabled),
+      pin_code: pinEnabled ? String(pinCode || '') : null,
+      profile_completed: true,
+    },
+  });
+  if (error) throw new Error(error.message);
+  return normalizeAuthUser(data.user);
+}
+
+export async function loginUser({ email, password }) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: normalizedEmail,
+    password: String(password || ''),
+  });
+  if (error) throw new Error(error.message);
+  return normalizeAuthUser(data.user);
+}
+
+export async function loginWithGoogleMock({ mode = 'login', next = '/' } = {}) {
+  const redirectUrl = new URL('/login.html', window.location.origin);
+  redirectUrl.searchParams.set('oauth', mode);
+  if (next && next !== '/') {
+    redirectUrl.searchParams.set('next', next);
+  }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: redirectUrl.toString() },
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function logoutUser() {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
+  localStorage.removeItem(ACTIVE_PROFILE_STORE_KEY);
+}
+
+function readStore(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
@@ -10,113 +100,141 @@ function readJson(key, fallback) {
   }
 }
 
-function writeJson(key, value) {
+function writeStore(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-export function getUsers() {
-  return readJson(USERS_KEY, []);
+function getProfilesStore() {
+  return readStore(PROFILES_STORE_KEY, {});
 }
 
-export function getSession() {
-  return readJson(SESSION_KEY, null);
+function setProfilesStore(store) {
+  writeStore(PROFILES_STORE_KEY, store);
 }
 
-export function getCurrentUser() {
-  const session = getSession();
-  if (!session?.email) return null;
-  return getUsers().find((u) => u.email === session.email) || null;
+function getActiveProfileStore() {
+  return readStore(ACTIVE_PROFILE_STORE_KEY, {});
 }
 
-export function registerUser({ name, email, password }) {
-  const users = getUsers();
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  if (users.some((u) => u.email === normalizedEmail)) {
-    throw new Error('Un compte avec cet email existe deja.');
+function setActiveProfileStore(store) {
+  writeStore(ACTIVE_PROFILE_STORE_KEY, store);
+}
+
+export async function getProfilesForCurrentUser() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) return [];
+  const store = getProfilesStore();
+  return store[currentUser.id] || [];
+}
+
+export async function createProfileForCurrentUser({ displayName, avatar = null } = {}) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) throw new Error('Session introuvable.');
+  const cleanName = String(displayName || '').trim();
+  if (!cleanName) throw new Error('Nom de profil obligatoire.');
+
+  const store = getProfilesStore();
+  const existing = store[currentUser.id] || [];
+  if (existing.length >= MAX_PROFILES_PER_ACCOUNT) {
+    throw new Error('Maximum 3 profils par compte.');
   }
-  const user = {
+  const profile = {
     id: crypto.randomUUID(),
-    name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Utilisateur',
-    email: normalizedEmail,
-    password: String(password || ''),
-    watchlist: [],
-    history: [],
-    profile: {
-      displayName: null,
-      avatar: null,
-      pinEnabled: false,
-      pinCode: null,
-      completed: false,
-    },
+    name: cleanName,
+    avatar: avatar || null,
+    createdAt: Date.now(),
   };
-  users.push(user);
-  writeJson(USERS_KEY, users);
-  writeJson(SESSION_KEY, { email: user.email, createdAt: Date.now() });
-  return user;
+  store[currentUser.id] = [...existing, profile];
+  setProfilesStore(store);
+  await setActiveProfileForCurrentUser(profile.id);
+  return profile;
 }
 
-export function updateCurrentUserProfile({ displayName, avatar, pinEnabled = false, pinCode = null }) {
-  const session = getSession();
-  if (!session?.email) throw new Error('Session introuvable.');
-  const users = getUsers();
-  const idx = users.findIndex((u) => u.email === session.email);
-  if (idx < 0) throw new Error('Utilisateur introuvable.');
-  const user = users[idx];
-  const updated = {
-    ...user,
-    name: String(displayName || '').trim() || user.name,
-    profile: {
-      ...(user.profile || {}),
-      displayName: String(displayName || '').trim() || user.name,
-      avatar: avatar || user.profile?.avatar || null,
-      pinEnabled: Boolean(pinEnabled),
-      pinCode: pinEnabled ? String(pinCode || '') : null,
-      completed: true,
-    },
+export function getMaxProfilesPerAccount() {
+  return MAX_PROFILES_PER_ACCOUNT;
+}
+
+export async function updateProfileForCurrentUser(profileId, { displayName, avatar } = {}) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) throw new Error('Session introuvable.');
+  const store = getProfilesStore();
+  const existing = store[currentUser.id] || [];
+  const idx = existing.findIndex((p) => p.id === profileId);
+  if (idx < 0) throw new Error('Profil introuvable.');
+
+  const nextName = String(displayName ?? existing[idx].name).trim();
+  if (!nextName) throw new Error('Nom de profil obligatoire.');
+  existing[idx] = {
+    ...existing[idx],
+    name: nextName,
+    avatar: avatar ?? existing[idx].avatar ?? null,
+    updatedAt: Date.now(),
   };
-  users[idx] = updated;
-  writeJson(USERS_KEY, users);
-  return updated;
+  store[currentUser.id] = existing;
+  setProfilesStore(store);
+  return existing[idx];
 }
 
-export function loginUser({ email, password }) {
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  const user = getUsers().find((u) => u.email === normalizedEmail);
-  if (!user || user.password !== String(password || '')) {
-    throw new Error('Email ou mot de passe invalide.');
+export async function deleteProfileForCurrentUser(profileId) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) throw new Error('Session introuvable.');
+  const store = getProfilesStore();
+  const existing = store[currentUser.id] || [];
+  if (existing.length <= 1) {
+    throw new Error('Tu dois garder au moins un profil.');
   }
-  writeJson(SESSION_KEY, { email: user.email, createdAt: Date.now() });
-  return user;
-}
+  const remaining = existing.filter((p) => p.id !== profileId);
+  if (remaining.length === existing.length) throw new Error('Profil introuvable.');
+  store[currentUser.id] = remaining;
+  setProfilesStore(store);
 
-export function loginWithGoogleMock({ email, name }) {
-  const normalizedEmail = String(email || '').trim().toLowerCase();
-  let users = getUsers();
-  let user = users.find((u) => u.email === normalizedEmail);
-  if (!user) {
-    user = {
-      id: crypto.randomUUID(),
-      name: String(name || '').trim() || normalizedEmail.split('@')[0] || 'Google User',
-      email: normalizedEmail,
-      password: null,
-      watchlist: [],
-      history: [],
-      provider: 'google',
-    };
-    users = [...users, user];
-    writeJson(USERS_KEY, users);
+  const activeStore = getActiveProfileStore();
+  if (activeStore[currentUser.id] === profileId) {
+    activeStore[currentUser.id] = remaining[0].id;
+    setActiveProfileStore(activeStore);
   }
-  writeJson(SESSION_KEY, { email: user.email, createdAt: Date.now() });
-  return user;
+  return remaining;
 }
 
-export function logoutUser() {
-  localStorage.removeItem(SESSION_KEY);
+export async function setActiveProfileForCurrentUser(profileId) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) throw new Error('Session introuvable.');
+  const profiles = await getProfilesForCurrentUser();
+  if (!profiles.some((p) => p.id === profileId)) {
+    throw new Error('Profil introuvable.');
+  }
+  const activeStore = getActiveProfileStore();
+  activeStore[currentUser.id] = profileId;
+  setActiveProfileStore(activeStore);
 }
 
-export function requireAuth() {
-  const session = getSession();
-  if (session?.email) return true;
+export async function getActiveProfileForCurrentUser() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) return null;
+  const activeStore = getActiveProfileStore();
+  const activeId = activeStore[currentUser.id];
+  if (!activeId) return null;
+  const profiles = await getProfilesForCurrentUser();
+  return profiles.find((p) => p.id === activeId) || null;
+}
+
+export async function ensureDefaultProfileForCurrentUser() {
+  const currentUser = await getCurrentUser();
+  if (!currentUser?.id) return null;
+  const profiles = await getProfilesForCurrentUser();
+  if (profiles.length) return profiles;
+
+  const fallbackName = currentUser.profile?.displayName || currentUser.name || currentUser.email?.split('@')[0] || 'Profil';
+  const created = await createProfileForCurrentUser({
+    displayName: fallbackName,
+    avatar: currentUser.profile?.avatar || null,
+  });
+  return [created];
+}
+
+export async function requireAuth() {
+  const session = await getSession();
+  if (session?.user?.id) return true;
   const current = `${window.location.pathname}${window.location.search}`;
   const redirect = encodeURIComponent(current);
   window.location.href = `/login.html?next=${redirect}`;
