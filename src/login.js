@@ -511,6 +511,12 @@ if (profileSetupForm) {
       if (profileSubmitBtn) profileSubmitBtn.disabled = false;
       return;
     }
+    if (displayName.length > 10) {
+      showError('Le nom de profil doit contenir 10 caractères maximum.');
+      profileSubmitInFlight = false;
+      if (profileSubmitBtn) profileSubmitBtn.disabled = false;
+      return;
+    }
     if (profilePinEnabled?.checked && !/^\d{4}$/.test(profilePinCode?.value || '')) {
       showError('Le code PIN doit contenir 4 chiffres.');
       profileSubmitInFlight = false;
