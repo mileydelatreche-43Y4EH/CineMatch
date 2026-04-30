@@ -1,4 +1,6 @@
-if (!window.__cinematchNavRouterInitialized) {
+const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+if (isLocalHost && !window.__cinematchNavRouterInitialized) {
   window.__cinematchNavRouterInitialized = true;
 
   const ROUTER_SCRIPT_PATH = '/src/nav-router.js';

@@ -63,7 +63,7 @@ function highQualityAvatarUrl(url) {
 
 function resolvedNextPath() {
   if (!nextPath || nextPath === '/' || nextPath === '/login.html') {
-    return '/index.html';
+    return '/search.html';
   }
   return nextPath;
 }
