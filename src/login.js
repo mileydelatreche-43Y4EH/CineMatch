@@ -47,6 +47,7 @@ const avatarTabs = document.querySelectorAll('.avatar-tab');
 const avatarGrid = document.getElementById('avatar-gallery-grid');
 const btnValidateAvatar = document.getElementById('btn-validate-avatar');
 const passwordToggleButtons = document.querySelectorAll('[data-toggle-password]');
+const profileSubmitBtn = profileSetupForm?.querySelector('button[type="submit"]');
 
 const params = new URLSearchParams(window.location.search);
 const nextPath = params.get('next') || '/';
@@ -54,6 +55,7 @@ const forceCreateProfile = params.get('createProfile') === '1';
 let selectedAvatar = null;
 let avatarCategory = 'netflix';
 let pendingAvatar = null;
+let profileSubmitInFlight = false;
 
 function highQualityAvatarUrl(url) {
   if (typeof url !== 'string') return url;
@@ -498,43 +500,60 @@ if (btnValidateAvatar && avatarGalleryOverlay) {
 if (profileSetupForm) {
   profileSetupForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (profileSubmitInFlight) return;
+    profileSubmitInFlight = true;
+    if (profileSubmitBtn) profileSubmitBtn.disabled = true;
+    clearError();
     const displayName = profileDisplayName?.value?.trim();
     if (!displayName) {
-      alert('Ajoute un nom de profil.');
+      showError('Ajoute un nom de profil.');
+      profileSubmitInFlight = false;
+      if (profileSubmitBtn) profileSubmitBtn.disabled = false;
       return;
     }
     if (profilePinEnabled?.checked && !/^\d{4}$/.test(profilePinCode?.value || '')) {
-      alert('Le code PIN doit contenir 4 chiffres.');
+      showError('Le code PIN doit contenir 4 chiffres.');
+      profileSubmitInFlight = false;
+      if (profileSubmitBtn) profileSubmitBtn.disabled = false;
       return;
     }
-    const activeProfile = await getActiveProfileForCurrentUser();
-    const shouldCreateProfile = forceCreateProfile || !activeProfile;
-
-    // Essaie de synchroniser les infos du compte sans bloquer le flux.
     try {
-      await updateCurrentUserProfile({
-        displayName,
-        avatar: selectedAvatar,
-        pinEnabled: Boolean(profilePinEnabled?.checked),
-        pinCode: profilePinCode?.value || null,
-      });
-    } catch (error) {
-      console.warn('Profile update warning:', error);
-    }
+      const activeProfile = await getActiveProfileForCurrentUser();
+      const shouldCreateProfile = forceCreateProfile || !activeProfile;
 
-    if (shouldCreateProfile) {
+      // Essaie de synchroniser les infos du compte sans bloquer le flux.
       try {
-        await createProfileForCurrentUser({
+        await updateCurrentUserProfile({
           displayName,
           avatar: selectedAvatar,
+          pinEnabled: Boolean(profilePinEnabled?.checked),
+          pinCode: profilePinCode?.value || null,
         });
       } catch (error) {
-        alert(error.message || 'Impossible de créer le profil.');
-        return;
+        console.warn('Profile update warning:', error);
       }
+
+      if (shouldCreateProfile) {
+        try {
+          await createProfileForCurrentUser({
+            displayName,
+            avatar: selectedAvatar,
+          });
+        } catch (error) {
+          // Si un profil actif existe déjà, on laisse avancer le flux.
+          const existing = await getActiveProfileForCurrentUser();
+          if (!existing) {
+            showError(error.message || 'Impossible de créer le profil.');
+            return;
+          }
+        }
+      }
+      closeProfileSetup();
+      redirectAfterAuth();
+    } finally {
+      profileSubmitInFlight = false;
+      if (profileSubmitBtn) profileSubmitBtn.disabled = false;
     }
-    closeProfileSetup();
-    redirectAfterAuth();
   });
 }
 
