@@ -609,6 +609,11 @@ hydrateProfileFromCache();
 
 showApiWarning();
 renderStoredWatchlist();
+// Re-synchronise l'UI watchlist (filtres + bouton Modifier) après injection des cartes.
+const activeWatchlistChip = document.querySelector('.filter-row .chip.active');
+if (activeWatchlistChip instanceof HTMLButtonElement) {
+  activeWatchlistChip.click();
+}
 updatePickedUI();
 
 async function initPageAuth() {
