@@ -3091,6 +3091,9 @@ body::after {
 
   .topnav a {
     font-size: 0.95rem;
+    padding: 0.42rem 0.7rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
   }
 
   .search-chip,
@@ -3123,6 +3126,32 @@ body::after {
   .search-page-filters {
     margin-top: 1.2rem;
     padding-bottom: 0.9rem;
+  }
+
+  .left-inline-filters,
+  .right-inline-filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .watchlist-layout {
+    padding: 1rem 1rem 2.1rem;
+  }
+
+  .watchlist-controls {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .filter-row {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .filter-row .chip {
+    flex: 1 1 calc(50% - 0.45rem);
+    min-width: 8.6rem;
+    text-align: center;
   }
 
   .filters-panel,
@@ -3177,6 +3206,88 @@ body::after {
   .site-footer-inner {
     padding: 1.4rem 1rem 2rem;
   }
+
+  .profiles-shell {
+    gap: 1.1rem;
+    padding-top: 1.2rem;
+  }
+
+  .profiles-shell h1 {
+    font-size: clamp(1.7rem, 9vw, 2.2rem);
+  }
+
+  .profiles-grid {
+    gap: 0.9rem;
+  }
+
+  .profile-select-avatar {
+    width: 6.2rem;
+    height: 6.2rem;
+  }
+
+  .profile-select-card {
+    font-size: 0.95rem;
+  }
+
+  #btn-profiles-logout {
+    min-width: 0;
+    width: min(92vw, 220px);
+  }
+
+  .settings-header-block h1 {
+    font-size: 1.75rem;
+  }
+
+  .settings-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-nav-item {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .settings-profile-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .settings-profile-main {
+    width: 100%;
+    gap: 0.7rem;
+  }
+
+  .settings-profile-actions {
+    width: 100%;
+    gap: 0.45rem;
+  }
+
+  .settings-profile-actions .btn {
+    flex: 1;
+  }
+
+  .suggestions-shell,
+  .idee-shell {
+    padding-inline: 1rem;
+  }
+
+  .suggestions-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .suggestions-actions .btn {
+    width: 100%;
+  }
+
+  .idee-search-row {
+    flex-direction: column;
+  }
+
+  .idee-search-row .btn {
+    width: 100%;
+  }
 }
 
 @media (max-width: 560px) {
@@ -3189,11 +3300,12 @@ body::after {
   }
 
   .topnav a {
-    font-size: 0.9rem;
+    font-size: 0.86rem;
+    padding: 0.38rem 0.6rem;
   }
 
   .search-chip {
-    padding: 0 0.7rem;
+    padding: 0 0.65rem;
     font-size: 0.85rem;
   }
 
@@ -3205,8 +3317,8 @@ body::after {
 
   .profile-chip .js-profile-name {
     min-width: 0;
-    font-size: 0.95rem;
-    max-width: 9rem;
+    font-size: 0.88rem;
+    max-width: 7.3rem;
   }
 
   .avatar-dot {
@@ -3216,6 +3328,7 @@ body::after {
 
   .watchlist-head {
     align-items: flex-start;
+    gap: 0.6rem;
   }
 
   .watchlist-head h1 {
@@ -3224,6 +3337,15 @@ body::after {
 
   .watchlist-head p {
     font-size: 0.82rem;
+  }
+
+  .modify-btn {
+    width: 100%;
+    min-height: 2.45rem;
+  }
+
+  .filter-row .chip {
+    flex: 1 1 100%;
   }
 
   .watchlist-grid,
@@ -3273,6 +3395,25 @@ body::after {
   .auth-card {
     width: min(94vw, 30rem);
     padding: 1rem;
+  }
+
+  .auth-form {
+    gap: 0.65rem;
+  }
+
+  .auth-form .btn.full,
+  #btn-google-login,
+  #btn-google-register {
+    min-height: 2.6rem;
+  }
+
+  .profile-select-avatar {
+    width: 5.4rem;
+    height: 5.4rem;
+  }
+
+  #btn-profiles-logout {
+    width: min(90vw, 200px);
   }
 
   .landing-content {
