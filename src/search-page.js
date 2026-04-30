@@ -35,6 +35,9 @@ const notificationsDrawer = document.getElementById('notifications-drawer');
 const btnCloseNotifications = document.getElementById('btn-close-notifications');
 const notifBackdrop = document.getElementById('notif-backdrop');
 const WATCHLIST_STORE_KEY = 'cinematch_watchlist_store_v1';
+if (document.body) {
+  document.body.style.visibility = 'hidden';
+}
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const API_BASE = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/original';
@@ -57,6 +60,24 @@ function getCurrentAuthUserIdFromStorage() {
     return null;
   }
   return null;
+}
+
+function hasStoredAuthToken() {
+  try {
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.includes('-auth-token')) continue;
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      if (parsed?.access_token || parsed?.currentSession?.access_token || parsed?.session?.access_token) {
+        return true;
+      }
+    }
+  } catch {
+    return false;
+  }
+  return false;
 }
 
 function getCachedActiveProfile() {
@@ -1371,8 +1392,17 @@ async function initPageAuth() {
     return;
   }
   await hydrateCurrentUserUi();
+  if (document.body) {
+    document.body.style.visibility = 'visible';
+  }
 }
 
 initPageAuth().catch((error) => {
   console.error(error);
 });
+
+if (!hasStoredAuthToken()) {
+  const current = `${window.location.pathname}${window.location.search}`;
+  const redirect = encodeURIComponent(current);
+  window.location.replace(`/login.html?next=${redirect}`);
+}
