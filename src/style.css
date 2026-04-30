@@ -3016,6 +3016,277 @@ body::after {
   animation: spin 0.7s linear infinite;
 }
 
+/* Responsive global (mobile/tablette) */
+@media (max-width: 1024px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .brand {
+    justify-self: start;
+  }
+
+  .topnav {
+    justify-self: start;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+
+  .topbar-right {
+    justify-self: start;
+    width: 100%;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .search-page-filters .chip-filter {
+    left: 0;
+  }
+
+  .search-page-filters .right-inline-filters {
+    position: static;
+  }
+
+  .search-page-filters .chip-filter,
+  .search-page-filters .right-inline-filters .chip-sort {
+    position: static;
+  }
+
+  .search-page-filters {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .left-inline-filters,
+  .right-inline-filters {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .watchlist-grid,
+  .search-results-section .watchlist-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .settings-shell,
+  .settings-shell-wide {
+    padding-inline: 1rem;
+  }
+
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-name {
+    font-size: 1.5rem;
+  }
+
+  .topnav a {
+    font-size: 0.95rem;
+  }
+
+  .search-chip,
+  .profile-chip,
+  .icon-chip {
+    height: 2.55rem;
+  }
+
+  .search-hero {
+    padding: 4.8rem 1rem 0.4rem;
+  }
+
+  .search-hero h1 {
+    font-size: clamp(1.35rem, 8vw, 1.9rem);
+  }
+
+  .search-hero p {
+    font-size: 0.8rem;
+  }
+
+  .search-page-controls {
+    padding: 0.2rem 1rem 1.2rem;
+  }
+
+  .search-input-big {
+    max-width: 100%;
+    margin-top: 1.2rem;
+  }
+
+  .search-page-filters {
+    margin-top: 1.2rem;
+    padding-bottom: 0.9rem;
+  }
+
+  .filters-panel,
+  .filters-panel.filters-active-only {
+    padding: 0.7rem;
+  }
+
+  .active-filters-row {
+    flex-direction: column;
+    gap: 0.55rem;
+    align-items: flex-start;
+  }
+
+  .wishboard-cta {
+    margin: 1rem 1rem 0.8rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .wishboard-cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-results-section {
+    padding: 0.5rem 1rem 0;
+  }
+
+  .search-results-section h2 {
+    font-size: 1.55rem;
+  }
+
+  .watchlist-grid,
+  .search-results-section .watchlist-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .result-card h3 {
+    font-size: 0.9rem;
+  }
+
+  .result-card p {
+    font-size: 0.74rem;
+  }
+
+  .catalog-pagination-inner {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .site-footer-inner {
+    padding: 1.4rem 1rem 2rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .topnav {
+    gap: 0.45rem 0.65rem;
+  }
+
+  .topnav a {
+    font-size: 0.9rem;
+  }
+
+  .search-chip {
+    padding: 0 0.7rem;
+    font-size: 0.85rem;
+  }
+
+  .profile-chip {
+    min-width: 0;
+    max-width: 100%;
+    padding-right: 0.55rem;
+  }
+
+  .profile-chip .js-profile-name {
+    min-width: 0;
+    font-size: 0.95rem;
+    max-width: 9rem;
+  }
+
+  .avatar-dot {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+
+  .watchlist-head {
+    align-items: flex-start;
+  }
+
+  .watchlist-head h1 {
+    font-size: 1.8rem;
+  }
+
+  .watchlist-head p {
+    font-size: 0.82rem;
+  }
+
+  .watchlist-grid,
+  .search-results-section .watchlist-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .poster-actions {
+    bottom: 0.7rem;
+    gap: 0.34rem;
+  }
+
+  .poster-action-btn {
+    width: 2.65rem;
+    height: 2.2rem;
+  }
+
+  .poster-action-btn svg {
+    width: 0.92rem;
+    height: 0.92rem;
+  }
+
+  .search-input-big input {
+    font-size: 0.95rem;
+    padding-left: 2.8rem;
+    background-position: 0.8rem center;
+  }
+
+  .chip-filter,
+  .chip-sort {
+    min-width: 0;
+    width: fit-content;
+  }
+
+  .sort-menu {
+    width: min(92vw, 18rem);
+    right: auto;
+    left: 0;
+  }
+
+  .notifications-drawer {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .auth-card {
+    width: min(94vw, 30rem);
+    padding: 1rem;
+  }
+
+  .landing-content {
+    padding-inline: 1rem;
+  }
+
+  .landing-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .landing-actions .btn {
+    width: 100%;
+  }
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

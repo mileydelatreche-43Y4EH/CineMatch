@@ -132,6 +132,7 @@ export async function createProfileForCurrentUser({ displayName, avatar = null }
   if (!currentUser?.id) throw new Error('Session introuvable.');
   const cleanName = String(displayName || '').trim();
   if (!cleanName) throw new Error('Nom de profil obligatoire.');
+  if (cleanName.length > 10) throw new Error('Le nom du profil doit contenir 10 caractères maximum.');
 
   const store = getProfilesStore();
   const existing = store[currentUser.id] || [];
@@ -164,6 +165,7 @@ export async function updateProfileForCurrentUser(profileId, { displayName, avat
 
   const nextName = String(displayName ?? existing[idx].name).trim();
   if (!nextName) throw new Error('Nom de profil obligatoire.');
+  if (nextName.length > 10) throw new Error('Le nom du profil doit contenir 10 caractères maximum.');
   existing[idx] = {
     ...existing[idx],
     name: nextName,

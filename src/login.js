@@ -76,10 +76,11 @@ async function handleOAuthReturn() {
   const session = await getSession();
   if (!session?.user?.id) return false;
   const currentUser = await getCurrentUser();
+  const activeProfile = await getActiveProfileForCurrentUser();
   const defaultName = currentUser?.name || currentUser?.email?.split('@')[0] || '';
-  const profileCompleted = Boolean(currentUser?.profile?.completed);
+  const profileCompleted = Boolean(currentUser?.profile?.completed) || Boolean(activeProfile);
 
-  if (oauthMode === 'register' || !profileCompleted) {
+  if (!profileCompleted) {
     if (authOverlay) authOverlay.hidden = true;
     if (landingHero) landingHero.hidden = true;
     openProfileSetup(defaultName);
