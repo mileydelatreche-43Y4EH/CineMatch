@@ -233,8 +233,12 @@ export async function ensureDefaultProfileForCurrentUser() {
 }
 
 export async function requireAuth() {
-  const session = await getSession();
-  if (session?.user?.id) return true;
+  try {
+    const session = await getSession();
+    if (session?.user?.id) return true;
+  } catch (error) {
+    console.error('Auth check failed:', error);
+  }
   const current = `${window.location.pathname}${window.location.search}`;
   const redirect = encodeURIComponent(current);
   window.location.href = `/login.html?next=${redirect}`;
