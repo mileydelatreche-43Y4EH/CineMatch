@@ -2,6 +2,7 @@ import {
   createProfileForCurrentUser,
   getActiveProfileForCurrentUser,
   getCurrentUser,
+  getProfilesForCurrentUser,
   getSession,
   loginUser,
   loginWithGoogleMock,
@@ -576,7 +577,9 @@ async function initAuthViewState() {
   const existingSession = await getSession();
   if (existingSession?.user?.id) {
     const currentUser = await getCurrentUser();
-    const profileCompleted = Boolean(currentUser?.profile?.completed);
+    const activeProfile = await getActiveProfileForCurrentUser();
+    const storedProfiles = await getProfilesForCurrentUser();
+    const profileCompleted = Boolean(currentUser?.profile?.completed) || Boolean(activeProfile) || storedProfiles.length > 0;
     if (forceCreateProfile || !profileCompleted) {
       if (landingHero) landingHero.hidden = true;
       if (authOverlay) authOverlay.hidden = true;

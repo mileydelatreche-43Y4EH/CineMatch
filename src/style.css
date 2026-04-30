@@ -2825,7 +2825,10 @@ body::after {
   border: 1px solid #c62828;
   color: #fff;
   box-shadow: none;
-  width: min(82vw, 380px);
+  width: auto;
+  min-width: 190px;
+  max-width: 240px;
+  padding-inline: 1.2rem;
   margin: 0.35rem auto 0;
 }
 

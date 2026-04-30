@@ -73,8 +73,16 @@ async function init() {
   });
 
   logoutBtn?.addEventListener('click', async () => {
-    await logoutUser();
-    window.location.href = '/login.html';
+    if (logoutBtn) logoutBtn.disabled = true;
+    try {
+      await logoutUser();
+    } catch (error) {
+      console.warn('Logout warning:', error);
+      // On force quand meme la sortie locale pour eviter un bouton "bloque".
+      localStorage.clear();
+    } finally {
+      window.location.replace('/login.html');
+    }
   });
 }
 

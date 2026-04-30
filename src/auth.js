@@ -226,12 +226,23 @@ export async function ensureDefaultProfileForCurrentUser() {
   const profiles = await getProfilesForCurrentUser();
   if (profiles.length) return profiles;
 
-  const fallbackName = currentUser.profile?.displayName || currentUser.name || currentUser.email?.split('@')[0] || 'Profil';
-  const created = await createProfileForCurrentUser({
-    displayName: fallbackName,
-    avatar: currentUser.profile?.avatar || null,
-  });
-  return [created];
+  const rawFallbackName = currentUser.profile?.displayName || currentUser.name || currentUser.email?.split('@')[0] || 'Profil';
+  const fallbackName = String(rawFallbackName).trim().slice(0, 10) || 'Profil';
+
+  try {
+    const created = await createProfileForCurrentUser({
+      displayName: fallbackName,
+      avatar: currentUser.profile?.avatar || null,
+    });
+    return [created];
+  } catch (error) {
+    console.warn('Default profile creation failed, retrying with safe fallback.', error);
+    const created = await createProfileForCurrentUser({
+      displayName: 'Profil',
+      avatar: currentUser.profile?.avatar || null,
+    });
+    return [created];
+  }
 }
 
 export async function requireAuth() {
