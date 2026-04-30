@@ -73,8 +73,21 @@ function getCurrentWatchlistItems() {
 function renderStoredWatchlist() {
   if (!els.watchlistGrid) return;
   const items = getCurrentWatchlistItems();
-  const emptyNode = els.watchlistGrid.querySelector('.watchlist-empty');
-  if (emptyNode) emptyNode.remove();
+  els.watchlistGrid.querySelectorAll('.result-card').forEach((node) => node.remove());
+  const existingEmpty = els.watchlistGrid.querySelector('.watchlist-empty');
+  if (existingEmpty) existingEmpty.remove();
+
+  if (!items.length) {
+    const empty = document.createElement('p');
+    empty.className = 'watchlist-empty';
+    empty.innerHTML =
+      "<span class=\"watchlist-empty-icon\">⚠</span>Ta watchlist ne contient rien... N'hésite pas à y<br />ajouter quelques pépites !";
+    els.watchlistGrid.appendChild(empty);
+    if (els.watchlistControls) els.watchlistControls.hidden = true;
+    if (els.watchlistModifyBtn) els.watchlistModifyBtn.hidden = true;
+    return;
+  }
+
   const cards = items.map((item) => {
     const type = normalizeWatchlistType(item.type);
     const typeLabel = type === 'series' ? 'Série' : type === 'anime' ? 'Animé' : 'Film';
@@ -502,6 +515,8 @@ if (els.notifBackdrop) {
 }
 
 if (els.filterChips?.length) {
+  let watchlistSearchTerm = '';
+
   const detectCardFilterType = (card) => {
     const poster = card.querySelector('.poster-card');
     const explicitType = poster?.getAttribute('data-type');
@@ -538,7 +553,10 @@ if (els.filterChips?.length) {
     const cards = Array.from(els.watchlistGrid.querySelectorAll('.result-card'));
     cards.forEach((card) => {
       const cardType = detectCardFilterType(card);
-      const show = filter === 'all' || cardType === filter;
+      const title = (card.querySelector('h3')?.textContent || '').toLowerCase();
+      const matchesText = !watchlistSearchTerm || title.includes(watchlistSearchTerm);
+      const matchesType = filter === 'all' || cardType === filter;
+      const show = matchesType && matchesText;
       card.style.display = show ? '' : 'none';
     });
     syncWatchlistEmptyState();
@@ -551,6 +569,13 @@ if (els.filterChips?.length) {
       applyWatchlistFilter(chip.getAttribute('data-filter') || 'all');
     });
   });
+
+  if (els.query) {
+    els.query.addEventListener('input', () => {
+      watchlistSearchTerm = els.query.value.trim().toLowerCase();
+      applyWatchlistFilter(activeWatchlistFilter);
+    });
+  }
 
   applyWatchlistFilter(activeWatchlistFilter);
 }

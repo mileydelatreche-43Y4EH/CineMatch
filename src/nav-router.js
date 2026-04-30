@@ -12,7 +12,8 @@ if (!window.__cinematchNavRouterInitialized) {
     if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
     try {
       const url = new URL(anchor.href, window.location.origin);
-      return url.origin === window.location.origin && url.pathname.endsWith('.html');
+      const isHtmlRoute = url.pathname.endsWith('.html') || url.pathname === '/';
+      return url.origin === window.location.origin && isHtmlRoute;
     } catch {
       return false;
     }
@@ -71,7 +72,7 @@ if (!window.__cinematchNavRouterInitialized) {
     if (event.defaultPrevented) return;
     if (event.button !== 0) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const anchor = event.target.closest('.topnav a');
+    const anchor = event.target.closest('.topnav a, .brand a, a[data-nav-link]');
     if (!isEligibleLink(anchor)) return;
     event.preventDefault();
     try {

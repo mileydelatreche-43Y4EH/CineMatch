@@ -35,9 +35,6 @@ const notificationsDrawer = document.getElementById('notifications-drawer');
 const btnCloseNotifications = document.getElementById('btn-close-notifications');
 const notifBackdrop = document.getElementById('notif-backdrop');
 const WATCHLIST_STORE_KEY = 'cinematch_watchlist_store_v1';
-if (document.body) {
-  document.body.style.visibility = 'hidden';
-}
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const API_BASE = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p/original';
@@ -141,6 +138,7 @@ let renderRequestId = 0;
 const renderedCatalogItems = new Map();
 let watchlistKeys = new Set();
 let watchlistToastTimer = null;
+const watchlistToggleInFlight = new Set();
 
 function apiUrl(path, params = {}) {
   const u = new URL(`${API_BASE}${path}`);
@@ -249,23 +247,47 @@ function getCurrentWatchlistUserKey() {
 }
 
 function addItemToWatchlist(item) {
-  const store = getWatchlistStore();
-  const userKey = getCurrentWatchlistUserKey();
-  const list = Array.isArray(store[userKey]) ? store[userKey] : [];
-  if (list.some((entry) => String(entry.id) === String(item.id) && entry.type === item.type)) return false;
-  list.push({
-    id: item.id,
-    type: item.type,
-    title: item.title,
-    poster: item.poster,
-    year: item.year,
-    meta: item.meta,
-    addedAt: Date.now(),
-  });
-  store[userKey] = list;
-  setWatchlistStore(store);
-  watchlistKeys.add(`${item.type}:${item.id}`);
-  return true;
+  try {
+    const store = getWatchlistStore();
+    const userKey = getCurrentWatchlistUserKey();
+    const list = Array.isArray(store[userKey]) ? store[userKey] : [];
+    if (list.some((entry) => String(entry.id) === String(item.id) && entry.type === item.type)) return false;
+    list.push({
+      id: item.id,
+      type: item.type,
+      title: item.title,
+      poster: item.poster,
+      year: item.year,
+      meta: item.meta,
+      addedAt: Date.now(),
+    });
+    store[userKey] = list;
+    setWatchlistStore(store);
+    watchlistKeys.add(`${item.type}:${item.id}`);
+    return true;
+  } catch (error) {
+    console.error('Watchlist add failed:', error);
+    return false;
+  }
+}
+
+function removeItemFromWatchlist(item) {
+  try {
+    const store = getWatchlistStore();
+    const userKey = getCurrentWatchlistUserKey();
+    const list = Array.isArray(store[userKey]) ? store[userKey] : [];
+    const next = list.filter(
+      (entry) => !(String(entry.id) === String(item.id) && String(entry.type) === String(item.type))
+    );
+    if (next.length === list.length) return false;
+    store[userKey] = next;
+    setWatchlistStore(store);
+    watchlistKeys.delete(`${item.type}:${item.id}`);
+    return true;
+  } catch (error) {
+    console.error('Watchlist remove failed:', error);
+    return false;
+  }
 }
 
 function refreshWatchlistKeys() {
@@ -286,9 +308,11 @@ function ensureWatchlistToast() {
   return toast;
 }
 
-function showWatchlistToast(message) {
+function showWatchlistToast(message, tone = 'success') {
   const toast = ensureWatchlistToast();
   toast.textContent = message;
+  toast.classList.remove('success', 'danger');
+  toast.classList.add(tone === 'danger' ? 'danger' : 'success');
   toast.hidden = false;
   toast.classList.add('show');
   if (watchlistToastTimer) {
@@ -300,6 +324,19 @@ function showWatchlistToast(message) {
       toast.hidden = true;
     }, 180);
   }, 2200);
+}
+
+function applyWatchlistButtonState(button, isAdded) {
+  if (!(button instanceof HTMLButtonElement)) return;
+  button.classList.toggle('is-added', isAdded);
+  const label = button.querySelector('.poster-action-label');
+  if (label) label.textContent = isAdded ? 'Déjà dans ma watchlist' : 'Ajouter à ma watchlist';
+  const icon = button.querySelector('svg');
+  if (icon) {
+    icon.innerHTML = isAdded
+      ? '<path d="M4.5 12.5 9.5 17.5 19.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+      : '<path d="M4 6h10M4 12h8M4 18h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16 9.2v5.6l4.8-2.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>';
+  }
 }
 
 function renderResultCard(item) {
@@ -548,7 +585,8 @@ function filteredItems() {
 function getForcedTypeFromState() {
   if (state.type) return state.type;
   if (state.tab === 'film' || state.tab === 'serie' || state.tab === 'anime') return state.tab;
-  return null;
+  // En mode "Accueil", on affiche les films par défaut.
+  return 'film';
 }
 
 function canUseRemoteCatalogMode() {
@@ -791,12 +829,12 @@ function renderPagination(totalItems) {
         ${pages
           .map((p) =>
             p === '...'
-              ? '<span class="catalog-page-ellipsis">...</span>'
+              ? '<button type="button" class="catalog-page-ellipsis-btn" data-page-jump-toggle="true">...</button>'
               : `<button type="button" class="catalog-page-btn ${p === state.page ? 'active' : ''}" data-page="${p}">${p}</button>`
           )
           .join('')}
       </div>
-      <form class="catalog-page-jump-form" data-page-jump-form>
+      <form class="catalog-page-jump-form" data-page-jump-form hidden>
         <label class="sr-only" for="catalog-page-jump-input">Aller à la page</label>
         <input id="catalog-page-jump-input" type="number" min="1" max="${totalPages}" placeholder="Page" data-page-jump-input />
         <button type="submit" class="catalog-page-jump-btn">Aller</button>
@@ -1207,6 +1245,16 @@ function bindControls() {
         syncUiAfterFilterChange({ preservePage: true });
         return;
       }
+      const jumpToggleBtn = target.closest('[data-page-jump-toggle]');
+      if (jumpToggleBtn) {
+        const form = paginationEl.querySelector('[data-page-jump-form]');
+        if (!(form instanceof HTMLFormElement)) return;
+        form.hidden = !form.hidden;
+        if (!form.hidden) {
+          const input = form.querySelector('[data-page-jump-input]');
+          if (input instanceof HTMLInputElement) input.focus();
+        }
+      }
     });
 
     paginationEl.addEventListener('submit', (event) => {
@@ -1237,22 +1285,31 @@ function bindControls() {
       const item = renderedCatalogItems.get(key);
       if (!item) return;
       if (action === 'watchlist') {
-        const added = addItemToWatchlist(item);
-        if (added) {
-          showWatchlistToast(`Le film "${item.title}" a bien été ajouté à ta watchlist !`);
-        } else {
-          showWatchlistToast(`"${item.title}" est déjà dans ta watchlist.`);
-        }
         const watchlistBtn = btn;
-        if (watchlistBtn instanceof HTMLButtonElement) {
-          watchlistBtn.classList.add('is-added');
-          const label = watchlistBtn.querySelector('.poster-action-label');
-          if (label) label.textContent = 'Déjà dans ma watchlist';
-          const icon = watchlistBtn.querySelector('svg');
-          if (icon) {
-            icon.innerHTML =
-              '<path d="M4.5 12.5 9.5 17.5 19.5 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>';
+        if (!(watchlistBtn instanceof HTMLButtonElement)) return;
+        if (watchlistToggleInFlight.has(key)) return;
+        watchlistToggleInFlight.add(key);
+        watchlistBtn.disabled = true;
+
+        try {
+          const isAlreadyAdded = watchlistKeys.has(`${item.type}:${item.id}`);
+          if (isAlreadyAdded) {
+            const removed = removeItemFromWatchlist(item);
+            if (removed) {
+              showWatchlistToast(`Vous avez retiré "${item.title}" de la watchlist.`, 'danger');
+              applyWatchlistButtonState(watchlistBtn, false);
+            }
+            return;
           }
+
+          const added = addItemToWatchlist(item);
+          if (added) {
+            showWatchlistToast(`Le film "${item.title}" a bien été ajouté à ta watchlist !`, 'success');
+            applyWatchlistButtonState(watchlistBtn, true);
+          }
+        } finally {
+          watchlistToggleInFlight.delete(key);
+          watchlistBtn.disabled = false;
         }
         return;
       }
@@ -1289,7 +1346,8 @@ async function hydrateCurrentUserUi() {
   const currentUser = await getCurrentUser();
   if (!currentUser) return;
   const activeProfile = await getActiveProfileForCurrentUser();
-  const displayName = activeProfile?.name || currentUser.name;
+  const displayName =
+    activeProfile?.name || currentUser.name || currentUser.email?.split('@')[0] || 'Profil';
   document.querySelectorAll('.js-profile-name').forEach((node) => {
     node.textContent = displayName;
   });
@@ -1392,9 +1450,6 @@ async function initPageAuth() {
     return;
   }
   await hydrateCurrentUserUi();
-  if (document.body) {
-    document.body.style.visibility = 'visible';
-  }
 }
 
 initPageAuth().catch((error) => {

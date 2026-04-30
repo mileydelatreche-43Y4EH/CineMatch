@@ -686,7 +686,6 @@ body::after {
   right: 1.2rem;
   bottom: 1.2rem;
   z-index: 120;
-  background: #1f9b4d;
   color: #f4fff7;
   border-radius: 8px;
   padding: 0.86rem 1rem;
@@ -697,6 +696,14 @@ body::after {
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.watchlist-toast.success {
+  background: #1f9b4d;
+}
+
+.watchlist-toast.danger {
+  background: #bb2e37;
 }
 
 .watchlist-toast.show {
